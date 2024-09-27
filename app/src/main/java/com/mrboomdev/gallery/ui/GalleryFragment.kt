@@ -11,19 +11,21 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.GridLayoutManager
-import androidx.recyclerview.widget.GridLayoutManager.SpanSizeLookup
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.RecyclerView
 import coil.load
 import com.mrboomdev.gallery.data.Photo
 import com.mrboomdev.gallery.databinding.GalleryItemBinding
-import kotlinx.coroutines.CoroutineScope
+import com.mrboomdev.gallery.util.GalleryLayoutManager
+import com.mrboomdev.gallery.util.extensions.dpPx
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.lang.ref.WeakReference
 
 class GalleryFragment : Fragment() {
-    private val adapter = Adapter()
+    lateinit var parentView: WeakReference<View>
+    private val mAdapter = Adapter()
     private var path: String? = null
 
     override fun onCreateView(
@@ -33,47 +35,25 @@ class GalleryFragment : Fragment() {
     ): View {
         path = arguments?.getString(ARGUMENT_PATH)
 
-        val maxColumns = inflater.context.resources.configuration.screenWidthDp / 75
-        val manager = GridLayoutManager(inflater.context, maxColumns)
-
-        manager.spanSizeLookup = object : SpanSizeLookup() {
-            override fun getSpanSize(position: Int): Int {
-                val item = adapter.items?.get(position) ?: return 1
-                var ratio = item.width.toFloat() / item.height.toFloat()
-                ratio *= 2
-
-                while(ratio > maxColumns) {
-                    ratio *= .9f
-                }
-
-                while(ratio < 1) {
-                    ratio *= 1.1f
-                }
-
-                return Math.round(ratio)
-            }
-        }
-
-        val recycler = RecyclerView(inflater.context)
-        recycler.layoutManager = manager
-        recycler.adapter = adapter
-
-        CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch {
             loadData()
         }
 
-        return recycler
+        return RecyclerView(inflater.context).apply {
+            adapter = mAdapter
+
+            layoutManager = GalleryLayoutManager(
+                maxRowHeight = context.dpPx(300f),
+                aspectRatioExtractor = { position ->
+                    mAdapter.items?.get(position).let {
+                        if(it == null) 0f else width.toFloat() / height.toFloat()
+                    }
+                }
+            )
+        }
     }
 
-    private suspend fun loadData() {
-        val images = mutableListOf<Photo>()
-
-        val collection = if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
-        } else {
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI
-        }
-
+    private fun loadFromCollectionUri(uri: Uri, into: MutableList<Photo>) {
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
@@ -81,30 +61,47 @@ class GalleryFragment : Fragment() {
             MediaStore.Images.Media.HEIGHT
         )
 
-       requireContext().contentResolver.query(
-            collection,
+        requireContext().contentResolver.query(
+            uri,
             projection,
             null,
             null,
             "${MediaStore.Images.Media.DATE_ADDED} DESC"
-       )?.use { cursor ->
-           val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-           val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-           val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
-           val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+            val heightColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.HEIGHT)
+            val widthColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.WIDTH)
 
-           while(cursor.moveToNext()) {
-               images += Photo(
-                   ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cursor.getLong(idColumn)),
-                   cursor.getString(nameColumn),
-                   cursor.getInt(widthColumn),
-                   cursor.getInt(heightColumn)
-               )
-           }
-       }
+            while(cursor.moveToNext()) {
+                into += Photo(
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, cursor.getLong(idColumn)),
+                    cursor.getString(nameColumn),
+                    cursor.getInt(widthColumn),
+                    cursor.getInt(heightColumn)
+                )
 
-        withContext(Dispatchers.Main) {
-            adapter.items = images
+                // TODO: Remove it after all optimizations
+                if(into.size >= 10) break
+            }
+        }
+    }
+
+    private suspend fun loadData() {
+        withContext(Dispatchers.IO) {
+            val images = ArrayList<Photo>()
+
+            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                loadFromCollectionUri(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL), images)
+                loadFromCollectionUri(MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_INTERNAL), images)
+            } else {
+                loadFromCollectionUri(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, images)
+                loadFromCollectionUri(MediaStore.Images.Media.INTERNAL_CONTENT_URI, images)
+            }
+
+            withContext(Dispatchers.Main) {
+                mAdapter.items = images
+            }
         }
     }
 
@@ -151,7 +148,11 @@ class GalleryFragment : Fragment() {
 
         fun bind(item: Photo) {
             this.uri = item.uri
-            binding.image.load(item.uri)
+
+            binding.image.load(item.uri) {
+                crossfade(100)
+                size(item.width, item.height)
+            }
         }
     }
 

@@ -2,11 +2,15 @@ package com.mrboomdev.gallery.ui
 
 import android.net.Uri
 import android.os.Bundle
-import android.widget.ImageView
+import android.util.Log
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import coil.load
-import com.mrboomdev.gallery.utils.applyTheme
+import com.github.piasy.biv.loader.ImageLoader
+import com.github.piasy.biv.view.BigImageView
+import com.github.piasy.biv.view.FrescoImageViewFactory
+import com.mrboomdev.gallery.util.extensions.applyTheme
+import com.mrboomdev.gallery.util.extensions.toast
+import java.io.File
 
 class SlideshowActivity : AppCompatActivity() {
 
@@ -19,13 +23,35 @@ class SlideshowActivity : AppCompatActivity() {
         val uri = intent.getParcelableExtra<Uri>(EXTRA_URI)
             ?: throw NullPointerException("Uri cannot be null!")
 
-        val imageview = ImageView(this)
-        imageview.scaleType = ImageView.ScaleType.FIT_CENTER
-        setContentView(imageview)
-        imageview.load(uri)
+        BigImageView(this).apply {
+            setImageViewFactory(FrescoImageViewFactory())
+            setInitScaleType(BigImageView.INIT_SCALE_TYPE_FIT_CENTER)
+
+            setImageLoaderCallback(object : ImageLoader.Callback {
+                override fun onCacheHit(imageType: Int, image: File?) {}
+                override fun onCacheMiss(imageType: Int, image: File?) {}
+                override fun onStart() {}
+                override fun onProgress(progress: Int) {}
+                override fun onFinish() {}
+
+                override fun onSuccess(image: File?) {
+                    ssiv.isQuickScaleEnabled = true
+                    ssiv.maxScale = 100f
+                }
+
+                override fun onFail(e: Exception?) {
+                    toast("Failed to load an image!")
+                    Log.e(TAG, "Failed to load an image!", e)
+                }
+            })
+
+            showImage(uri)
+            setContentView(this)
+        }
     }
 
     companion object {
         const val EXTRA_URI = "uri"
+        private const val TAG = "SlideshowActivity"
     }
 }

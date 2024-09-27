@@ -1,4 +1,4 @@
-package com.mrboomdev.gallery.utils
+package com.mrboomdev.gallery.util.extensions
 
 import android.app.Activity
 import android.content.Context
@@ -32,7 +32,7 @@ fun View.setBottomPadding(padding: Int) {
 }
 
 fun View.setTopPadding(padding: Int) {
-    setPadding(paddingLeft, padding, paddingRight, paddingRight)
+    setPadding(paddingLeft, padding, paddingRight, paddingBottom)
 }
 
 fun View.setLeftMargin(margin: Int) {

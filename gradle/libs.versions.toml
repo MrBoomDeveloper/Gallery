@@ -1,6 +1,5 @@
 [versions]
 agp = "8.5.2"
-androidRetrostreams = "1.7.4"
 balloon = "1.6.6"
 bigimageviewer = "1.8.1"
 coil = "2.7.0"
@@ -8,10 +7,6 @@ colorpickerview = "2.3.0"
 compiler = "4.16.0"
 coreSplashscreen = "1.0.1"
 fragmentKtx = "1.8.3"
-greedoLayout = "v1.5.3"
-junit = "4.13.2"
-junitVersion = "1.2.1"
-espressoCore = "3.6.1"
 appcompat = "1.7.0"
 material = "1.12.0"
 activity = "1.9.2"
@@ -22,7 +17,6 @@ kotlin = "2.0.20"
 coreKtx = "1.13.1"
 
 [libraries]
-android-retrostreams = { module = "net.sourceforge.streamsupport:android-retrostreams", version.ref = "androidRetrostreams" }
 androidx-swiperefreshlayout = { module = "androidx.swiperefreshlayout:swiperefreshlayout", version.ref = "swiperefreshlayoutVersion" }
 annotations = { module = "com.github.bumptech.glide:annotations", version.ref = "compiler" }
 balloon = { module = "com.github.skydoves:balloon", version.ref = "balloon" }
@@ -32,19 +26,12 @@ coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coil" }
 coil-svg = { module = "io.coil-kt:coil-svg", version.ref = "coil" }
 coil-video = { module = "io.coil-kt:coil-video", version.ref = "coil" }
 colorpickerview = { module = "com.github.skydoves:colorpickerview", version.ref = "colorpickerview" }
-glide-compiler = { module = "com.github.bumptech.glide:compiler", version.ref = "compiler" }
 core-splashscreen = { module = "androidx.core:core-splashscreen", version.ref = "coreSplashscreen" }
 fragment-ktx = { module = "androidx.fragment:fragment-ktx", version.ref = "fragmentKtx" }
-glide = { module = "com.github.bumptech.glide:glide", version.ref = "compiler" }
-glide-imageloader = { module = "com.github.piasy:GlideImageLoader", version.ref = "bigimageviewer" }
-glide-imageviewfactory = { module = "com.github.piasy:GlideImageViewFactory", version.ref = "bigimageviewer" }
-greedoLayout = { module = "com.github.500px:greedo-layout-for-android", version.ref = "greedoLayout" }
+frescoimageloader = { module = "com.github.piasy:FrescoImageLoader", version.ref = "bigimageviewer" }
+frescoimageviewfactory = { module = "com.github.piasy:FrescoImageViewFactory", version.ref = "bigimageviewer" }
 room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
-
-junit = { group = "junit", name = "junit", version.ref = "junit" }
-ext-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 
 appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }

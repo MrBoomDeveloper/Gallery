@@ -60,6 +60,8 @@ dependencies {
     implementation(libs.coil.svg)
     implementation(libs.coil.video)
     implementation(libs.bigimageviewer)
+    implementation(libs.frescoimageloader)
+    implementation(libs.frescoimageviewfactory)
 
     // Data
     implementation(libs.room.runtime)

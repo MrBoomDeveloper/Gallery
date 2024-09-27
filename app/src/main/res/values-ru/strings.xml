@@ -3,4 +3,9 @@
     <string name="app_name">Галлерея</string>
     <string name="photos">Фото</string>
     <string name="albums">Альбомы</string>
+    <string name="add">Добавить</string>
+    <string name="quick_settings">Быстрые Настройки</string>
+    <string name="search">Поиск</string>
+    <string name="search_photos">Поиск ваших фото и видео</string>
+    <string name="search_albums">Поиск ваших альбомов</string>
 </resources>
